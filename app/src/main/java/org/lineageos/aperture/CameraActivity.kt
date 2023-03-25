@@ -52,6 +52,7 @@ import androidx.camera.extensions.ExtensionMode
 import androidx.camera.video.Quality
 import androidx.camera.video.Recording
 import androidx.camera.video.VideoRecordEvent
+import androidx.camera.video.muted
 import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
@@ -1330,7 +1331,7 @@ open class CameraActivity : AppCompatActivity() {
             // Torch mode can be toggled at any time
             flashButton.isEnabled =
                 cameraMode != CameraMode.PHOTO || cameraState == CameraState.IDLE
-            micButton.isEnabled = cameraState == CameraState.IDLE
+            micButton.isEnabled = cameraState == CameraState.IDLE || audioConfig.audioEnabled
             settingsButton.isEnabled = cameraState == CameraState.IDLE
         }
     }
@@ -1587,7 +1588,7 @@ open class CameraActivity : AppCompatActivity() {
     private fun updateMicrophoneModeIcon() {
         micButton.isVisible = cameraMode == CameraMode.VIDEO
 
-        audioConfig.audioEnabled.let {
+        sharedPreferences.lastMicMode.let {
             micButton.setCompoundDrawablesWithIntrinsicBounds(
                 0,
                 if (it) R.drawable.ic_mic_on else R.drawable.ic_mic_off,
@@ -1602,7 +1603,7 @@ open class CameraActivity : AppCompatActivity() {
      * Toggles microphone during video recording
      */
     private fun toggleMicrophoneMode() {
-        setMicrophoneMode(!audioConfig.audioEnabled)
+        setMicrophoneMode(!sharedPreferences.lastMicMode)
     }
 
     /**
@@ -1611,9 +1612,9 @@ open class CameraActivity : AppCompatActivity() {
     @SuppressLint("MissingPermission")
     private fun setMicrophoneMode(microphoneMode: Boolean) {
         audioConfig = AudioConfig.create(microphoneMode)
-        updateMicrophoneModeIcon()
-
+        recording?.muted = !microphoneMode
         sharedPreferences.lastMicMode = microphoneMode
+        updateMicrophoneModeIcon()
     }
 
     /**
